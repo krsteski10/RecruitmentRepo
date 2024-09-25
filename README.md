@@ -47,3 +47,8 @@ Average Experience: GET statistics/averageexperience
 Top Skills: GET statistics/topskills
 -Created a Dashboard with charts representing the data.
 
+
+First Part version 2:
+-Introducing layered architecture into the project.
+-Implementing Core, BusinessLayer, DataLayer as class libraries.
+-Fixing all the dependencies and proper handling of the Database connection.
