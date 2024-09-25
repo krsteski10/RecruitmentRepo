@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using RecruitmentAPI.Data;
-using RecruitmentAPI.Models;
-using System.Text.Json;
+using RecruitmentAPI.BusinessLayer.Interfaces;
+using RecruitmentAPI.Core.Models;
 
 namespace RecruitmentAPI.Controllers
 {
@@ -10,50 +8,33 @@ namespace RecruitmentAPI.Controllers
     [Route("api/[controller]")]
     public class CandidatesController : Controller
     {
-        private readonly RecruitmentContext _context;
-        public CandidatesController(RecruitmentContext context)
+        private readonly ICandidateService _candidateService;
+
+        public CandidatesController(ICandidateService candidateService)
         {
-            _context = context;
+            _candidateService = candidateService;
         }
 
         // GET: api/candidates
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Candidate>>> GetCandidates([FromQuery] FilterOptions filter)
         {
-            var query = _context.Candidates.Include(c => c.Skills).Include(c => c.Feedbacks).AsQueryable();
-
-            // Apply filtering here
-            if (filter.Experience.HasValue)
-            {
-                query = query.Where(c => c.YearsOfExperience >= filter.Experience.Value);
-            }
-            if (!string.IsNullOrEmpty(filter.Skill))
-            {
-                query = query.Where(c => c.Skills.Any(s => s.Name == filter.Skill));
-            }
-            if (filter.IsHired.HasValue)
-            {
-                query = query.Where(c => c.IsHired == filter.IsHired.Value);
-            }
-
-            return await query.ToListAsync();
+            var candidates = await _candidateService.GetFilteredCandidatesAsync(filter);
+            return Ok(candidates);
         }
 
         // GET: api/candidates/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<Candidate>> GetCandidateById(int id)
         {
-            var candidate = await _context.Candidates
-                                          .Include(c => c.Skills)
-                                          .Include(c => c.Feedbacks)
-                                          .FirstOrDefaultAsync(c => c.Id == id);
+            var candidate = await _candidateService.GetCandidateByIdAsync(id);
 
             if (candidate == null)
             {
                 return NotFound();
             }
 
-            return candidate;
+            return Ok(candidate);
         }
 
         // POST: api/candidates
@@ -65,8 +46,7 @@ namespace RecruitmentAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            _context.Candidates.Add(candidate);
-            await _context.SaveChangesAsync();
+            await _candidateService.AddCandidateAsync(candidate);
 
             return CreatedAtAction(nameof(GetCandidateById), new { id = candidate.Id }, candidate);
         }
@@ -80,15 +60,13 @@ namespace RecruitmentAPI.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(candidate).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _candidateService.UpdateCandidateAsync(candidate);
             }
-            catch (DbUpdateConcurrencyException)
+            catch
             {
-                if (!CandidateExists(id))
+                if (!_candidateService.CandidateExists(id))
                 {
                     return NotFound();
                 }
@@ -102,22 +80,15 @@ namespace RecruitmentAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCandidate(int id)
         {
-            var candidate = await _context.Candidates.FindAsync(id);
+            var candidate = await _candidateService.GetCandidateByIdAsync(id);
             if (candidate == null)
             {
                 return NotFound();
             }
 
-            _context.Candidates.Remove(candidate);
-            await _context.SaveChangesAsync();
+            await _candidateService.DeleteCandidateAsync(id);
 
             return NoContent();
-        }
-
-        // Helper methods
-        private bool CandidateExists(int id)
-        {
-            return _context.Candidates.Any(c => c.Id == id);
         }
     }
 }
