@@ -25,7 +25,7 @@ The DB Schema with the 3 tables has been created. <br/>
 <h3>Second Part: UmbracoCMS integration</h3>
 
 -Setting up a new Umbraco project. Implementing necessary dotnet packages to build and run the Umbraco locally (dotnet run in the cmd prompt). Created a new account and logged in UmbracoCMS. <br/>
--UmbracoCMS Setup: You have created a document type for Candidate with properties for fields like candidateName and a checkbox list for Skills. <br/>
+-UmbracoCMS Setup: Created a document type for Candidate with properties for fields like candidateName and a checkbox list for Skills. <br/>
 -Exposing REST API endpoints <br/>
 GET https://localhost:{port}/umbraco/api/candidateapi/getcandidates <br/>
 CREATE https://localhost:{port}/umbraco/api/candidateapi/createcandidates/{id} <br/>
